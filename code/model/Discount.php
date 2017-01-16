@@ -62,6 +62,19 @@ class Discount extends DataObject {
      * @return DataList matching discounts
      */
     public static function get_matching(Order $order, $context = array()) {
+        // If the order has been placed, return historical discount and ignore futher checks
+        if ($order->Placed) {
+            return $discounts = self::get()->filter(array(
+                'StartDate:LessThan' => $order->Created,
+                'EndDate:GreaterThan' => $order->Created,
+            ))
+            ->filterAny(array(
+                "Amount:GreaterThan" => 0,
+                "Percent:GreaterThan" => 0
+            ));
+        }
+
+        
         //get as many matching discounts as possible in a single query
         $discounts = self::get()
             ->filter("Active", true)
